@@ -15,44 +15,16 @@ class Task
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    public int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    public string $name;
 
     /**
      * @ORM\Column(type="boolean")
      */
-    private $isDone;
+    public bool $isDone=false;
 
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    public function getIsDone(): ?bool
-    {
-        return $this->isDone;
-    }
-
-    public function setIsDone(bool $isDone): self
-    {
-        $this->isDone = $isDone;
-
-        return $this;
-    }
 }

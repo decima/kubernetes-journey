@@ -1,0 +1,26 @@
+##############
+## Exp 1 : 2 Containers which communicates each other in a pod.
+##############
+apiVersion: apps/v1 #k8s version api
+kind: Deployment # deployment type : pod template + replica/placement specs.
+metadata:
+  name: exp1 # Name of the deployment
+spec:
+  replicas: 1 # Replica constraints : 1 instance of each containers
+  selector: # The selector will gives you what podTemplate to run with this replicaset
+    matchLabels: 
+      app: exp1 # labels are user defined as in docker
+  
+  template: # The template is a podTemplate which defines how to create the pod.
+    metadata: # these metadata are used by the replica selector
+      labels:
+        app: exp1 
+    spec:
+      containers: # List of containers to run into the pod
+      - name: cta # Name of the container
+        image: curlimages/curl # docker image
+        command: ["watch","-n" ,"2", "curl 127.0.0.1:80"] # The splitted command
+      - name: ctb
+        image: "containous/whoami"
+
+                

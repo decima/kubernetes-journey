@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t4
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: t4
+        tier: backend
+    spec:
+      containers:
+      - name: cta
+        image: "containous/whoami"
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: t4
+  labels:
+    tier: backend
+spec:
+  selector:
+    app: t4 #For all pods which match t4/backend which means only the top one
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8000 #out port
+    targetPort: 80 #pod port

@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sf-nginx
+  labels:
+    app: nginx_php
+    tier: backend
+data:
+  site-conf : |
+    server {
+      index index.php index.html;
+      error_log  /var/log/nginx/error.log;
+      access_log /var/log/nginx/access.log;
+      root /code/public;
+
+      location / {
+        try_files $uri /index.php$is_args$args;
+      }
+
+      location ~ ^/index\.php(/|$) {
+          fastcgi_split_path_info ^(.+\.php)(/.*)$;
+          fastcgi_pass 127.0.0.1:9000;
+          include fastcgi_params;
+          fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+          fastcgi_param DOCUMENT_ROOT $realpath_root;
+          internal;
+        }
+      location ~ \.php$ {
+        return 404;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-php-app
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: nginx-php-app
+        tier: backend
+    spec:
+      volumes:
+      - name: cfg
+        configMap:
+          name: sf-nginx
+          items:
+          - key: site-conf
+            path: site.conf
+      - name: code
+        hostPath:
+          path: /home/henri/projects/learning/kubernetes/app
+          type: Directory
+      containers:
+      - name: php
+        image: php:8-fpm
+        volumeMounts:
+        - name: code
+          mountPath: /code/
+      - name: nginx
+        image: nginx
+        volumeMounts:
+        - name: cfg
+          mountPath: /etc/nginx/conf.d
+        - name: code
+          mountPath: /code/
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-php-sf
+  labels:
+    tier: backend
+spec:
+  selector:
+    app: nginx-php-app
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8000 #out port
+    targetPort: 80 #pod port
