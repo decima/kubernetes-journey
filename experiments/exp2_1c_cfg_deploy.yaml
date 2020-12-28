@@ -1,62 +1,43 @@
+# This can be externalized in another file. It's just a way to be more compact. 
+apiVersion: v1
+kind: ConfigMap # KV storage
+metadata:
+  name: exp2-config # global configMap name.
+data:
+  my-file-1 : | # The pipe tells yaml to take the following content as a single block.
+    # here start the content
+    YAY It works
+    This is way to awesome !
+---
+# The deployment config
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: t2
+  name: exp2
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: my_app
-      tier: backend
+      app: exp2
   template:
     metadata:
       labels:
-        app: my_app
-        tier: backend
+        app: exp2
     spec:
-      volumes:
-        - name: cfg
+      volumes: # Add volumes layout
+        - name: my-config # Name of the volume for the pod
           configMap:
-            name: nginx-config
+            name: exp2-config # Reference to the global exp2-config configMap 
             items:
-              - key: site-conf
-                path: site.conf
+              - key: my-file-1 # Association between the file key  
+                path: myfile.txt # And the path of the filename
       containers:
         - name: cta
           image: busybox
           command:
             - tail
             - "-f"
-            - /to/site.conf
-          volumeMounts:
-            - name: cfg
-              mountPath: /to/
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-config
-  labels:
-    tier: backend
-data:
-  site-conf : |
-    server {
-      index index.php index.html;
-      error_log  /var/log/nginx/error.log;
-      access_log /var/log/nginx/access.log;
-      root /code;
-
-      location / {
-          try_files $uri $uri/ /index.php?$query_string;
-      }
-
-      location ~ \.php$ {
-          try_files $uri =404;
-          fastcgi_split_path_info ^(.+\.php)(/.+)$;
-          fastcgi_pass php:9000;
-          fastcgi_index index.php;
-          include fastcgi_params;
-          fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-          fastcgi_param PATH_INFO $fastcgi_path_info;
-        }
-    }
+            - /to/myfile.txt
+          volumeMounts: 
+            - name: my-config # Link the container cta to the volume my-config
+              mountPath: /to/ # Path where to load the volume. 
